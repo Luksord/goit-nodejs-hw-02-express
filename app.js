@@ -7,8 +7,6 @@ require("dotenv").config();
 const Contact = require("./models/model");
 
 const mongoURI = process.env.DB_HOST;
-// const { DB_HOST: urlDb } = process.env;
-// const connection = mongoose.connect(urlDb);
 
 const contactsRouter = require("./routes/contacts");
 
@@ -28,34 +26,16 @@ app.use((err, req, res, next) => {
   res.status(500).json({ message: err.message });
 });
 
-// connection
-//   .then(() => {
-//     console.log("DB connected");
-//   })
-//   .catch((error) => {
-//     console.log(error);
-//     process.exit(1);
-//   });
-const startServer = async () => {
+const connectDB = async () => {
   try {
     await mongoose.connect(mongoURI);
     console.log("Database connection successful.");
-    // app.listen(3000, () => {
-    //   console.log("Server is running on port 3000");
-    // });
   } catch (error) {
     console.log("Database connection error:", error.message);
     process.exit(1);
   }
 };
 
-startServer();
-
-const testDatabaseConnection = async () => {
-  const contacts = await Contact.find();
-  console.log("Contacts:", contacts);
-};
-
-testDatabaseConnection();
+connectDB();
 
 module.exports = app;

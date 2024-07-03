@@ -101,6 +101,7 @@ router.patch("/:id/favorite", async (req, res, next) => {
 
 module.exports = router;
 
+// // Alternative Option
 // const express = require("express");
 // const router = express.Router();
 // const {
@@ -112,11 +113,11 @@ module.exports = router;
 //   updateStatus,
 // } = require("../controllers/controllers");
 
-// router.get("/", getAllContacts);
-// router.get("/:contactId", getContactById);
-// router.post("/", addContact);
-// router.delete("/:contactId", removeContact);
-// router.put("/:contactId", updateContact);
+// router.get("/", getContacts);
+// router.get("/:contactId", getContact);
+// router.post("/", createContact);
+// router.delete("/:contactId", deleteContact);
+// router.put("/:contactId", update);
 // router.patch("/:contactId/status", updateStatus);
 
 // module.exports = router;
