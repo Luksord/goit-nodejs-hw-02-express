@@ -101,24 +101,3 @@ router.patch("/:id/favorite", auth, async (req, res, next) => {
 });
 
 module.exports = router;
-
-// // Alternative Option
-// const express = require("express");
-// const router = express.Router();
-// const {
-//   getAllContacts,
-//   getContactById,
-//   addContact,
-//   removeContact,
-//   updateContact,
-//   updateStatus,
-// } = require("../controllers/controllers");
-
-// router.get("/", getContacts);
-// router.get("/:contactId", getContact);
-// router.post("/", createContact);
-// router.delete("/:contactId", deleteContact);
-// router.put("/:contactId", update);
-// router.patch("/:contactId/status", updateStatus);
-
-// module.exports = router;
