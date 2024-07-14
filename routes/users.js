@@ -4,11 +4,18 @@ const User = require("../models/userModel");
 const auth = require("../middleware/auth");
 const jwt = require("jsonwebtoken");
 const Joi = require("joi");
+const gravatar = require("gravatar");
+const multer = require("multer");
+const jimp = require("jimp");
+const fs = require("fs/promises");
+const path = require("path");
 
 const signupSchema = Joi.object({
   email: Joi.string().email().required(),
   password: Joi.string().required(),
 });
+
+const upload = multer({ dest: "tmp/" });
 
 router.post("/signup", async (req, res, next) => {
   try {
@@ -21,7 +28,8 @@ router.post("/signup", async (req, res, next) => {
     if (existingUser) {
       return res.status(409).json({ message: "This email is already taken." });
     }
-    const newUser = new User({ email });
+    const avatarURL = gravatar.url(email, { s: "250", d: "identicon" });
+    const newUser = new User({ email, avatarURL });
     await newUser.setPassword(password);
     await newUser.save();
     return res.status(201).json({ message: "Created new user." });
@@ -83,5 +91,29 @@ router.get("/current", auth, async (req, res, next) => {
     next(error);
   }
 });
+
+router.patch(
+  "/avatars",
+  auth,
+  upload.single("avatar"),
+  async (req, res, next) => {
+    try {
+      const filePath = req.file.path;
+      const image = await Jimp.read(filePath);
+      await image.resize(250, 250).writeAsync(filePath);
+      const { path: tempPath, filename } = req.file;
+      const uniqueFilename = `${req.user._id}-${filename}`;
+      const avatarDir = path.join(__dirname, "../public/avatars");
+      const finalPath = path.join(avatarDir, uniqueFilename);
+      await fs.rename(tempPath, finalPath);
+      const avatarURL = `/avatars/${uniqueFilename}`;
+      req.user.avatarURL = avatarURL;
+      await req.user.save();
+      res.status(200).json({ avatarURL });
+    } catch (error) {
+      next(error);
+    }
+  }
+);
 
 module.exports = router;
