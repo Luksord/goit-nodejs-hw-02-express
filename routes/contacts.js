@@ -7,7 +7,8 @@ const {
   removeContact,
   addContact,
   updateContact,
-} = require("../models/contacts");
+} = require("../models/contactModel");
+const auth = require("../middleware/auth");
 
 const contactSchema = Joi.object({
   name: Joi.string().required(),
@@ -19,7 +20,7 @@ const favoriteSchema = Joi.object({
   favorite: Joi.boolean().required(),
 });
 
-router.get("/", async (req, res, next) => {
+router.get("/", auth, async (req, res, next) => {
   try {
     const contacts = await listContacts();
     res.status(200).json(contacts);
@@ -28,7 +29,7 @@ router.get("/", async (req, res, next) => {
   }
 });
 
-router.get("/:id", async (req, res, next) => {
+router.get("/:id", auth, async (req, res, next) => {
   try {
     const contact = await getContactById(req.params.id);
     if (!contact) {
@@ -40,7 +41,7 @@ router.get("/:id", async (req, res, next) => {
   }
 });
 
-router.post("/", async (req, res, next) => {
+router.post("/", auth, async (req, res, next) => {
   try {
     const { error } = contactSchema.validate(req.body);
     if (error) {
@@ -53,7 +54,7 @@ router.post("/", async (req, res, next) => {
   }
 });
 
-router.delete("/:id", async (req, res, next) => {
+router.delete("/:id", auth, async (req, res, next) => {
   try {
     const removedContact = await removeContact(req.params.id);
     if (!removedContact) {
@@ -65,7 +66,7 @@ router.delete("/:id", async (req, res, next) => {
   }
 });
 
-router.put("/:id", async (req, res, next) => {
+router.put("/:id", auth, async (req, res, next) => {
   try {
     const { error } = contactSchema.validate(req.body);
     if (error) {
@@ -81,7 +82,7 @@ router.put("/:id", async (req, res, next) => {
   }
 });
 
-router.patch("/:id/favorite", async (req, res, next) => {
+router.patch("/:id/favorite", auth, async (req, res, next) => {
   try {
     const { error } = favoriteSchema.validate(req.body);
     if (error) {
@@ -100,24 +101,3 @@ router.patch("/:id/favorite", async (req, res, next) => {
 });
 
 module.exports = router;
-
-// // Alternative Option
-// const express = require("express");
-// const router = express.Router();
-// const {
-//   getAllContacts,
-//   getContactById,
-//   addContact,
-//   removeContact,
-//   updateContact,
-//   updateStatus,
-// } = require("../controllers/controllers");
-
-// router.get("/", getContacts);
-// router.get("/:contactId", getContact);
-// router.post("/", createContact);
-// router.delete("/:contactId", deleteContact);
-// router.put("/:contactId", update);
-// router.patch("/:contactId/status", updateStatus);
-
-// module.exports = router;
