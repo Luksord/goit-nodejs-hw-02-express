@@ -1,21 +1,18 @@
 const express = require("express");
 const router = express.Router();
 const User = require("../models/userModel");
-const auth = require("../middleware/auth");
 const jwt = require("jsonwebtoken");
 const Joi = require("joi");
 const gravatar = require("gravatar");
-const multer = require("multer");
-const jimp = require("jimp");
 const fs = require("fs/promises");
 const path = require("path");
+const auth = require("../middleware/auth");
+const upload = require("../middleware/upload");
 
 const signupSchema = Joi.object({
   email: Joi.string().email().required(),
   password: Joi.string().required(),
 });
-
-const upload = multer({ dest: "tmp/" });
 
 router.post("/signup", async (req, res, next) => {
   try {
