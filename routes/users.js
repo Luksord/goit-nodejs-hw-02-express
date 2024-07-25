@@ -8,6 +8,7 @@ const fs = require("fs/promises");
 const path = require("path");
 const auth = require("../middleware/auth");
 const upload = require("../middleware/upload");
+const email = require("../models/email");
 
 const signupSchema = Joi.object({
   email: Joi.string().email().required(),
@@ -43,7 +44,7 @@ router.post("/login", async (req, res) => {
     }
     const user = await User.findOne({ email });
     if (!user) {
-      return res.status(401).json({ message: "No such user found" });
+      return res.status(401).json({ message: "User not found" });
     }
     const isPasswordCorrect = await user.validatePassword(password);
     if (isPasswordCorrect) {
@@ -112,5 +113,39 @@ router.patch(
     }
   }
 );
+
+router.post("/verify/:verificationToken", auth, async (req, res, next) => {
+  try {
+    const verificationToken = await User.findOne({ email });
+    if (!verificationToken) {
+      return res.status(401).json({ message: "User not found" });
+    }
+    return;
+    verificationToken = null;
+    verify = true;
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.post("/send-email", async (req, res, next) => {
+  const { email: userMail, name } = req.body;
+  try {
+    await email(
+      `<h1>Hello new user!</h1><a href="http://localhost:3000/api/users/code/${code}">Click here to verify your email</a>`,
+      "Welcome",
+      userMail
+    );
+  } catch (error) {
+    console.log(error);
+    return next(error);
+  }
+  res.send("ok");
+});
+
+router.get("/code/:code", async (req, res, next) => {
+  const { code } = req.params;
+  res.send(code);
+});
 
 module.exports = router;
