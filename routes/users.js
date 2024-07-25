@@ -8,6 +8,7 @@ const fs = require("fs/promises");
 const path = require("path");
 const auth = require("../middleware/auth");
 const upload = require("../middleware/upload");
+const { v4: uuidv4 } = require("uuid");
 const email = require("../models/email");
 
 const signupSchema = Joi.object({
@@ -27,10 +28,34 @@ router.post("/signup", async (req, res, next) => {
       return res.status(409).json({ message: "This email is already taken." });
     }
     const avatarURL = gravatar.url(email, { s: "250", d: "identicon" });
-    const newUser = new User({ email, avatarURL });
+    const verificationToken = uuidv4();
+    const newUser = new User({ email, avatarURL, verificationToken });
     await newUser.setPassword(password);
     await newUser.save();
-    return res.status(201).json({ message: "Created new user." });
+    const verifyEmail = `http://localhost:3000/api/users/verify/${verificationToken}`;
+    const html = `<p>To verify your email, click the following link: <a href="${verifyEmail}">Verify Email</a></p>`;
+    await email(html, "Click here to verify your email", email);
+    return res.status(201).json({
+      message:
+        "Created new user. Please check your email to verify your account.",
+    });
+  } catch (error) {
+    console.log(error);
+    return next(error);
+  }
+});
+
+router.get("/verify/:verificationToken", async (req, res, next) => {
+  try {
+    const { verificationToken } = req.params;
+    const user = await User.findOne({ verificationToken });
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+    user.verificationToken = null;
+    user.verify = true;
+    await user.save();
+    return res.status(200).json({ message: "Email verified successfully." });
   } catch (error) {
     next(error);
   }
@@ -113,39 +138,5 @@ router.patch(
     }
   }
 );
-
-router.post("/verify/:verificationToken", auth, async (req, res, next) => {
-  try {
-    const verificationToken = await User.findOne({ email });
-    if (!verificationToken) {
-      return res.status(401).json({ message: "User not found" });
-    }
-    return;
-    verificationToken = null;
-    verify = true;
-  } catch (error) {
-    next(error);
-  }
-});
-
-router.post("/send-email", async (req, res, next) => {
-  const { email: userMail, name } = req.body;
-  try {
-    await email(
-      `<h1>Hello new user!</h1><a href="http://localhost:3000/api/users/code/${code}">Click here to verify your email</a>`,
-      "Welcome",
-      userMail
-    );
-  } catch (error) {
-    console.log(error);
-    return next(error);
-  }
-  res.send("ok");
-});
-
-router.get("/code/:code", async (req, res, next) => {
-  const { code } = req.params;
-  res.send(code);
-});
 
 module.exports = router;
