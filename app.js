@@ -2,7 +2,6 @@ const express = require("express");
 const logger = require("morgan");
 const cors = require("cors");
 const app = express();
-const Contact = require("./models/contactModel");
 
 const mongoose = require("mongoose");
 require("dotenv").config();
