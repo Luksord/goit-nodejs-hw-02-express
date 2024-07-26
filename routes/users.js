@@ -33,8 +33,8 @@ router.post("/signup", async (req, res, next) => {
     await newUser.setPassword(password);
     await newUser.save();
     const verifyEmail = `http://localhost:3000/api/users/verify/${verificationToken}`;
-    const html = `<p>To verify your email, click the following link: <a href="${verifyEmail}">Verify Email</a></p>`;
-    await email(html, "Click here to verify your email", email);
+    const html = `<p>Click the following link to verify your email: <a href="${verifyEmail}">Verify Email</a></p>`;
+    await email(html, "Verify your email", email);
     return res.status(201).json({
       message:
         "Created new user. Please check your email to verify your account.",
@@ -42,22 +42,6 @@ router.post("/signup", async (req, res, next) => {
   } catch (error) {
     console.log(error);
     return next(error);
-  }
-});
-
-router.get("/verify/:verificationToken", async (req, res, next) => {
-  try {
-    const { verificationToken } = req.params;
-    const user = await User.findOne({ verificationToken });
-    if (!user) {
-      return res.status(404).json({ message: "User not found" });
-    }
-    user.verificationToken = null;
-    user.verify = true;
-    await user.save();
-    return res.status(200).json({ message: "Email verified successfully." });
-  } catch (error) {
-    next(error);
   }
 });
 
@@ -138,5 +122,43 @@ router.patch(
     }
   }
 );
+
+router.get("/verify/:verificationToken", async (req, res, next) => {
+  try {
+    const { verificationToken } = req.params;
+    const user = await User.findOne({ verificationToken });
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+    user.verificationToken = null;
+    user.verify = true;
+    await user.save();
+    return res.status(200).json({ message: "Email verified successfully." });
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.post("/verify", async (req, res, next) => {
+  try {
+    const { email } = req.body;
+    if (!email) {
+      return res.status(400).json({ message: "Missing required field email" });
+    }
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+    if (user.verify) {
+      return res.status(400).json({ message: "Verification already passed" });
+    }
+    const verifyEmail = `http://localhost:3000/users/verify/${user.verificationToken}`;
+    const html = `<p>Click the following link to verify your email: <a href="${verifyEmail}">Verify Email</a></p>`;
+    await email(html, "Verify your email", email);
+    return res.status(200).json({ message: "Verification email sent" });
+  } catch (error) {
+    next(error);
+  }
+});
 
 module.exports = router;
