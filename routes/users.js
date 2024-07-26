@@ -55,6 +55,9 @@ router.post("/login", async (req, res) => {
     if (!user) {
       return res.status(401).json({ message: "User not found" });
     }
+    if (!user.verify) {
+      return res.status(401).json({ message: "Email not verified" });
+    }
     const isPasswordCorrect = await user.validatePassword(password);
     if (isPasswordCorrect) {
       const payload = {
